@@ -18,21 +18,25 @@ from email.message import EmailMessage
 from email.utils import formataddr
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from dotenv import load_dotenv
 
-# ==================== НАСТРОЙКИ ====================
-VK_GROUP_TOKEN = 'vk1.a.bkc0VU4cqUYUcXbPGTxN2DCvjLsWf4LQcoleFcNkY48cwQeCJAtBVXuGjze2461b6YZL1mb9iuiPis1JggxV2gJESBR6wLr50eR9ox4tfOHP78anWuVGUegelwPJIuG-oNiH11c0Mc7lxBECwOM8VcJjqiWtsz24xrXtC_HJCgeKNJed3HaZr9Hg-Km6DIzi0r70DMnpflpGzC9jHQkAXA'
-VK_GROUP_ID = 242696420
+# ==================== ЗАГРУЗКА СЕКРЕТОВ ====================
+load_dotenv()
 
-# SMTP НАСТРОЙКИ (настраивает разработчик)
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 465
-SMTP_USER = 'dadlyvernon123@gmail.com'
-SMTP_PASSWORD = 'seei ubde ijyl xkke'
-MAIL_FROM_NAME = "VK Bot"
+VK_GROUP_TOKEN = os.getenv("VK_GROUP_TOKEN", "")
+VK_GROUP_ID = int(os.getenv("VK_GROUP_ID", 0))
 
-# Главные администраторы (только они могут добавлять других админов)
-ROOT_ADMIN_IDS = {287029514}
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 465))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "VK Bot")
 
+# Превращаем строку "123, 456" в множество чисел {123, 456}
+_admins_str = os.getenv("ROOT_ADMIN_IDS", "")
+ROOT_ADMIN_IDS = {int(x.strip()) for x in _admins_str.split(",") if x.strip()}
+
+# ==================== КОНСТАНТЫ ====================
 CONFIG_FILE = Path("config.json")
 MAX_FILE_SIZE = 20 * 1024 * 1024
 MAX_TOTAL_ATTACHMENTS = 20 * 1024 * 1024
@@ -56,7 +60,6 @@ def load_config():
     with CONFIG_FILE.open("r", encoding="utf-8") as file:
         data = json.load(file)
 
-    # Защита от старого формата файла
     if "chats" not in data:
         return {"chats": data, "admins": []}
     return data
@@ -117,11 +120,9 @@ def get_main_keyboard(is_root=False):
     keyboard.add_line()
     keyboard.add_button("Список почт", color=VkKeyboardColor.PRIMARY)
 
-    # Если это главный админ, добавляем кнопку "Админы" в этот же ряд или отдельный
     if is_root:
         keyboard.add_button("Админы", color=VkKeyboardColor.SECONDARY)
 
-    # Кнопка помощи всегда в самом низу
     keyboard.add_line()
     keyboard.add_button("Помощь", color=VkKeyboardColor.SECONDARY)
 
